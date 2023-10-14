@@ -1,0 +1,99 @@
+pip install pandas yfinance matplotlib numpy
+
+import yfinance as yf
+import warnings
+warnings.filterwarnings("ignore")
+
+# Descargar los datos utilizando el método .download()
+raw_data = yf.download(tickers="^GSPC ^FTSE ^N225 ^GDAXI", start="1994-01-07", end="2023-09-23", interval="1d", group_by='ticker', auto_adjust=True, threads=True)
+
+# Crear una copia de respaldo en caso de que se necesite
+df_comp = raw_data.copy()
+
+# Agregar nuevas columnas al conjunto de datos
+df_comp['spx'] = df_comp['^GSPC'].Close
+df_comp['dax'] = df_comp['^GDAXI'].Close
+df_comp['ftse'] = df_comp['^FTSE'].Close
+df_comp['nikkei'] = df_comp['^N225'].Close
+
+# Eliminar la primera fila si es necesario (ajustar a tus requisitos)
+# df_comp = df_comp.iloc[1:]
+
+# Eliminar los tickers originales del conjunto de datos
+del df_comp['^N225']
+del df_comp['^GSPC']
+del df_comp['^GDAXI']
+del df_comp['^FTSE']
+
+# Establecer la frecuencia de los datos a días hábiles
+df_comp = df_comp.asfreq('B')
+
+# Rellenar valores faltantes hacia adelante
+df_comp = df_comp.fillna(method='ffill')
+# Restablecer el índice para que "Date" sea una columna
+df_comp = df_comp.reset_index()
+
+print(df_comp.head()) # Mostrar las primeras 5 filas para verificar la descarga
+print(df_comp.tail()) # Verificar la última fecha en la serie
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Supongamos que ya tienes un DataFrame llamado 'df_comp' con tus datos
+
+# Especifica el nombre del archivo CSV
+nombre_archivo_csv = "Index_2023.csv"  # Reemplaza 'tu_archivo.csv' con el nombre que desees
+
+# Guarda el DataFrame en un archivo CSV en Google Colab
+df_comp.to_csv("Index_2023.csv", index=True)
+
+# Mueve el archivo CSV a tu unidad de Google Drive
+import shutil
+ruta_destino_drive = "/content/drive/My Drive/" + "Index_2023.csv"
+shutil.move("Index_2023.csv", ruta_destino_drive)
+
+# Asegúrate de que los datos se hayan guardado en Google Drive
+print(f"Los datos se han guardado en Google Drive en {ruta_destino_drive}.")
+----------------------------------------------------------------------------------------------
+#PRIMER EJERCICIO:
+df_comp.head()
+
+df_comp
+
+df_comp.describe()
+
+df_comp.isna()
+
+df_comp.spx.isna().sum()
+
+import matplotlib.pyplot as plt
+df_comp.spx.plot(figsize=(20,5), title = "S&P500 Prices")
+plt.show()
+
+df_comp.ftse.plot(figsize=(20,5), title = "FTSE100 Prices")
+plt.show()
+
+df_comp.spx.plot(figsize=(20,5), title = "S&P500 Prices")
+df_comp.ftse.plot(figsize=(20,5), title = "FTSE100 Prices")
+plt.title("S&P v FTSE")
+plt.show()
+
+import scipy.stats
+import pylab
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Configuración de estilo de Seaborn
+sns.set(style="whitegrid")
+
+# Crear un QQ Plot
+scipy.stats.probplot(df_comp.spx, plot=pylab, dist="norm", fit=True, rvalue=True)
+plt.title("QQ Plot - S&P500", size=18)
+plt.xlabel("Cuantiles teóricos", size=14)
+plt.ylabel("Cuantiles observados", size=14)
+
+# Añadir una línea diagonal de referencia
+plt.plot([pylab.xlim()[0], pylab.xlim()[1]], [pylab.xlim()[0], pylab.xlim()[1]], color='red', linestyle='--')
+
+# Mostrar el gráfico
+plt.show()
