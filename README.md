@@ -1,1 +1,0 @@
-# Tarea-2--An-lisis-de-series-temporales
